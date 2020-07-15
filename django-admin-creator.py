@@ -91,7 +91,7 @@ def clear_content(content):
     return content
 
 
-def create_admin(file):
+def create_admin(file, admin_class, admin_inline_class):
 
     content_model = read_file(file)
     models = content_model.split('\nclass ')
@@ -144,31 +144,26 @@ def main(argv):
     admin_inline_class = 'admin.TabularInline'
 
     try:
-        opts, args = getopt.getopt(argv, "hfai:", ["file=", ])
+        opts, args = getopt.getopt(argv, "f:", ["file=", ])
 
     except getopt.GetoptError:
-        print('python django-admin-creator.py -f <file> -a <admin_class> -i <admin_inline_class>')
+        print('python django-admin-creator.py -f <file>')
         sys.exit(2)
 
     for opt, arg in opts:
 
         if opt in ("-h", "--help", '-?'):
-            print('python django-admin-creator.py -f <file> -a <admin_class> -i <admin_inline_class>')
+            print('python django-admin-creator.py -f <file>')
             sys.exit()
 
         elif opt in ("-f", "--file"):
             file = arg
 
-        elif opt in ("-a", "--admin"):
-            admin_class = arg
-
-        elif opt in ("-i", "--admininline"):
-            admin_inline_class = arg
-
     if file:
-        create_admin(file)
+        create_admin(file, admin_class, admin_inline_class)
     else:
-        print('python django-admin-creator.py -f <file> -a <admin_class> -i <admin_inline_class>')
+        print('Example:')
+        print('python django-admin-creator.py -f <file>')
 
 
 if __name__ == "__main__":
