@@ -143,8 +143,6 @@ def create_admin(file, admin_class, admin_inline_class):
                     fieldname = get_fieldname(t2)
                     fieldtype = get_fieldtype(t2)
                     all_fields.append("'%s'," % fieldname)
-
-                    print(fieldname, fieldtype )
                     
                     if fieldtype in ('CharField', 
                                      'TextField'):
