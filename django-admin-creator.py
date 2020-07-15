@@ -24,8 +24,8 @@ from django.forms import Select, Textarea
 
 from django_currentuser.middleware import get_current_user
 
-from models import *
-from forms import *"""
+from .models import *
+from .forms import *"""
 
 
 ADMIN = """
@@ -64,7 +64,7 @@ from django.db.models import Q
 
 from django_currentuser.middleware import get_current_user
 
-from models import *"""
+from .models import *"""
 
 
 FORM = """
