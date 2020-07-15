@@ -130,11 +130,11 @@ def create_admin(file):
 
     if not os.path.isfile(admin_file):
         save_file(admin_file, content_admin)
-        print('%s foi salvo com sucesso!' % admin_file)
+        print('%s successfully saved!' % admin_file)
 
     if not os.path.isfile(forms_file):
         save_file(forms_file, content_forms)
-        print('%s foi salvo com sucesso!' % forms_file)
+        print('%s successfully saved!' % forms_file)
 
 
 def main(argv):
@@ -147,13 +147,13 @@ def main(argv):
         opts, args = getopt.getopt(argv, "hfai:", ["file=", ])
 
     except getopt.GetoptError:
-        print('python django_admin_creator.py -f <file>')
+        print('python django-admin-creator.py -f <file> -a <admin_class> -i <admin_inline_class>')
         sys.exit(2)
 
     for opt, arg in opts:
 
         if opt in ("-h", "--help", '-?'):
-            print('python django_admin_creator.py -f <file> -a <admin_class> -i <admin_inline_class>')
+            print('python django-admin-creator.py -f <file> -a <admin_class> -i <admin_inline_class>')
             sys.exit()
 
         elif opt in ("-f", "--file"):
