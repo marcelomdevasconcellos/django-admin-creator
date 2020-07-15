@@ -35,10 +35,14 @@ ADMIN = """
 class %(model_name)sAdmin(%(admin_class)s):
 
     form = %(model_name)sForm
-    search_fields = ()
-    list_filter = ()
+    search_fields = (
+        %(search_fields)s
+    )
+    list_filter = (
+        %(list_filter)s
+    )
     list_display = (
-        %(fields)s
+        %(list_display)s
     )
     inlines = []"""
 
@@ -53,7 +57,7 @@ class %(model_name)sInline(%(admin_inline_class)s):
     extra = 3
     readonly_fields = ()
     fields = (
-        %(fields)s
+        %(all_fields)s
     )"""
 
 
@@ -82,6 +86,9 @@ class %(model_name)sForm(forms.ModelForm):
 
 def clear_content(content):
 
+    content = content.replace('=', ' = ')
+    content = content.replace(':', '')
+    content = content.replace('%(class)s', '%|class|s')
     for n in range(10):
         content = content.replace('\n', '')
         content = content.replace('  ', ' ')
@@ -90,40 +97,89 @@ def clear_content(content):
     
     return content
 
+def get_fieldname(text):
+    t1 = text.split(' = models.')
+    return t1[0].replace(' ', '')
+
+
+def get_fieldtype(text):
+    t1 = text.split(' = models.')
+    t2 = t1[1].split('(')
+    return t2[0].replace(' ', '')
+
 
 def create_admin(file, admin_class, admin_inline_class):
 
     content_model = read_file(file)
-    models = content_model.split('\nclass ')
+    content_model = clear_content(content_model)
+    models = content_model.split('class ')
     del models[0]
     content_admin = ADMIN_BASE
     content_forms = FORM_BASE
 
     for m in models:
-        
+    
         t1 = m.split('(')
-        data_dict = {}
-        data_dict['model_name'] = t1[0]
-        data_dict['admin_class'] = admin_class
-        data_dict['admin_inline_class'] = admin_inline_class
-        t1 = m.split(' = models.')
-        del t1[len(t1)-1]
-        fields = []
 
-        for t2 in t1:
-            t3 = t2.split(' ')
-            field_name = t3[len(t3)-1]
-            fields.append("'%s'," % field_name)
+        if 'Meta' not in t1[0]:
         
-        data_dict['fields'] = '\n        '.join(fields)
+            data_dict = {}
+            data_dict['model_name'] = t1[0]
+            data_dict['admin_class'] = admin_class
+            data_dict['admin_inline_class'] = admin_inline_class
+            t1 = m.split(')')
+            del t1[len(t1)-1]
 
-        txt = "ForeignKey('%(model_name)s'" % data_dict
+            search_fields = []
+            all_fields = []
+            list_filter = []
+            list_display = []
 
-        if txt in clear_content(content_model):
-            content_admin += ADMIN_INLINE % data_dict
 
-        content_admin += ADMIN % data_dict
-        content_forms += FORM % data_dict
+            for t2 in t1:
+                
+                if 'models.' in t2:
+            
+                    fieldname = get_fieldname(t2)
+                    fieldtype = get_fieldtype(t2)
+                    all_fields.append("'%s'," % fieldname)
+
+                    print(fieldname, fieldtype )
+                    
+                    if fieldtype in ('CharField', 
+                                     'TextField'):
+                        search_fields.append("'%s'," % fieldname)
+                    
+                    if fieldtype in ('ForeignKey', 
+                                     'DateTimeField', 
+                                     'DateField', 
+                                     'BooleanField'):
+                        list_filter.append("'%s'," % fieldname)
+                    
+                    if 'choices' in t2:
+                        list_filter.append("'%s'," % fieldname)
+                    
+                    if fieldtype in ('CharField', 
+                                     'ForeignKey', 
+                                     'DateTimeField', 
+                                     'DateField', 
+                                     'BooleanField'):
+                        list_display.append("'%s'," % fieldname)
+
+            
+            data_dict['search_fields'] = '\n        '.join(search_fields)
+            data_dict['list_filter'] = '\n        '.join(list_filter)
+            data_dict['list_display'] = '\n        '.join(list_display)
+            data_dict['all_fields'] = '\n        '.join(all_fields)
+
+            txt = "ForeignKey('%(model_name)s'" % data_dict
+
+            inline_question = input('Include inline admin on %(model_name)s ? (Y/N) ' % data_dict)
+            if inline_question == 'Y':
+                content_admin += ADMIN_INLINE % data_dict
+
+            content_admin += ADMIN % data_dict
+            content_forms += FORM % data_dict
 
     admin_file = file.replace('models.py', 'admin.py')
     forms_file = file.replace('models.py', 'forms.py')
@@ -132,9 +188,21 @@ def create_admin(file, admin_class, admin_inline_class):
         save_file(admin_file, content_admin)
         print('%s successfully saved!' % admin_file)
 
+    else:
+        replace_file = input('%s already exists ! Do you want replace it ? (Y/N) ' % admin_file)
+        if replace_file == 'Y':
+            save_file(admin_file, content_admin)
+            print('%s successfully saved!' % admin_file)
+
     if not os.path.isfile(forms_file):
         save_file(forms_file, content_forms)
         print('%s successfully saved!' % forms_file)
+    
+    else:
+        replace_file = input('%s already exists ! Do you want replace it ? (Y/N) ' % forms_file)
+        if replace_file == 'Y':
+            save_file(forms_file, content_forms)
+            print('%s successfully saved!' % forms_file)
 
 
 def main(argv):
@@ -161,6 +229,7 @@ def main(argv):
 
     if file:
         create_admin(file, admin_class, admin_inline_class)
+        print()
     else:
         print('Example:')
         print('python django-admin-creator.py -f <file>')
