@@ -167,6 +167,8 @@ def main(argv):
 
     if file:
         create_admin(file)
+    else:
+        print('python django-admin-creator.py -f <file> -a <admin_class> -i <admin_inline_class>')
 
 
 if __name__ == "__main__":
